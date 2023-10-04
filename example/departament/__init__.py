@@ -1,0 +1,1 @@
+from .departament import Departament
