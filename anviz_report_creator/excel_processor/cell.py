@@ -1,5 +1,4 @@
 from datetime import datetime
-
 import openpyxl.styles as styles
 from openpyxl.cell import Cell as BaseCell
 from openpyxl.worksheet.worksheet import Worksheet

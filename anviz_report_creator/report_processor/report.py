@@ -22,7 +22,7 @@ class Report:
         elif user_ids is not None:
             self.__user_ids: list = user_ids
         self.__departament_id: int = departament_id
-        self.records: list = Record.get(user_ids=self.__user_ids, date_range=self.__date_range)
+        self.records: list = list(Record.get(user_ids=self.__user_ids, date_range=self.__date_range))
         self.periods: tuple = tuple(map(lambda period: period.date(),
                                         pandas.date_range(self.__date_range[0], self.__date_range[1])))
         algorithm(self)

@@ -1,15 +1,12 @@
 import os
 import aiohttp
-from anviz_report_creator.config import ilovepdf_api as config
+from .settings import Settings
 
 
 class API:
-    def __init__(self, tool: str):
-        self.__transfer_protocol: str = config.transfer_protocol if config.transfer_protocol else 'https'
-        self.__api_url: str = config.api_url if config.api_url else 'api.ilovepdf.com'
-        self.__api_version: str = config.api_version if config.api_version else 'v1'
+    def __init__(self, tool: str, settings: Settings):
+        self.__settings = settings
         self.__tool: str = tool
-        self.__public_keys: str or list = config.public_keys
         self.__public_key: str = self.__get_public_key()
         self.__session: aiohttp.ClientSession = aiohttp.ClientSession()
         self.__is_authenticated: bool = False
@@ -18,8 +15,9 @@ class API:
         self.uploaded_files: list = []
 
     async def authenticate(self):
-        response: aiohttp.ClientResponse = await self.__session.post(f'{self.__transfer_protocol}://'
-                                                                     f'{self.__api_url}/{self.__api_version}/auth',
+        response: aiohttp.ClientResponse = await self.__session.post(f'{self.__settings.transfer_protocol}:'
+                                                                     f'//{self.__settings.api_url}'
+                                                                     f'/{self.__settings.api_version}/auth',
                                                                      data={'public_key': self.__public_key})
         response_data: dict = await response.json()
         await self.close_session()
@@ -29,8 +27,9 @@ class API:
     async def create_task(self) -> dict:
         if not self.__is_authenticated:
             await self.authenticate()
-        response: aiohttp.ClientResponse = await self.__session.get(f'{self.__transfer_protocol}://'
-                                                                    f'{self.__api_url}/{self.__api_version}'
+        response: aiohttp.ClientResponse = await self.__session.get(f'{self.__settings.transfer_protocol}:'
+                                                                    f'//{self.__settings.api_url}'
+                                                                    f'/{self.__settings.api_version}'
                                                                     f'/start/{self.__tool}')
         response_data: dict = await response.json()
         if response_data.get('name') == 'Unauthorized':
@@ -46,8 +45,8 @@ class API:
     async def upload_file(self, file_path: str) -> dict:
         file_name: str = os.path.basename(file_path)
         with open(file_path, 'rb') as file:
-            response: aiohttp.ClientResponse = await self.__session.post(f'{self.__transfer_protocol}://'
-                                                                         f'{self.__server}/{self.__api_version}'
+            response: aiohttp.ClientResponse = await self.__session.post(f'{self.__settings.transfer_protocol}://'
+                                                                         f'{self.__server}/{self.__settings.api_version}'
                                                                          f'/upload',
                                                                          data={
                                                                              'task': self.__task,
@@ -73,16 +72,16 @@ class API:
             'tool': self.__tool
         }
         data = data | prepared_files
-        response: aiohttp.ClientResponse = await self.__session.post(f'{self.__transfer_protocol}://'
-                                                                     f'{self.__server}/{self.__api_version}'
+        response: aiohttp.ClientResponse = await self.__session.post(f'{self.__settings.transfer_protocol}://'
+                                                                     f'{self.__server}/{self.__settings.api_version}'
                                                                      f'/process',
                                                                      data=data)
         response_data: dict = await response.json()
         return response_data
 
     async def download(self, output_path: str) -> str:
-        response: aiohttp.ClientResponse = await self.__session.get(f'{self.__transfer_protocol}://'
-                                                                    f'{self.__server}/{self.__api_version}/'
+        response: aiohttp.ClientResponse = await self.__session.get(f'{self.__settings.transfer_protocol}://'
+                                                                    f'{self.__server}/{self.__settings.api_version}/'
                                                                     f'download/{self.__task}')
         if response.content_type == 'application/json':
             response_data: dict = await response.json()
@@ -96,14 +95,9 @@ class API:
         await self.__session.close()
 
     def __get_public_key(self) -> str:
-        if not self.__public_keys:
+        if not self.__settings.public_keys:
             raise RuntimeError('Files limit reached or undefined public_key in config.ilovepdf_api')
-        if type(self.__public_keys) == str:
-            key: str = self.__public_keys
-            self.__public_keys: None = None
-            return key
-        elif type(self.__public_keys) == list:
-            try:
-                return self.__public_keys.pop()
-            except IndexError:
-                raise RuntimeError('Files limit reached or undefined public_key in config.ilovepdf_api')
+        try:
+            return self.__settings.public_keys.pop()
+        except IndexError:
+            raise RuntimeError('Files limit reached or undefined public_key in config.ilovepdf_api')

@@ -1,5 +1,4 @@
 from openpyxl.worksheet.worksheet import Worksheet
-
 from .cell import Cell
 
 
@@ -9,10 +8,6 @@ class Row:
         self.index: int = index
         self.cells: tuple = ()
         self.__current_column_index: int = 1
-        # if cells is None:
-        #     self.cells: tuple = ()
-        # else:
-        #     self.cells: tuple = cells
 
     def set(self, *args):
         """

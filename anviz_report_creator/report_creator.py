@@ -4,16 +4,21 @@ from .progress_bar import ProgressBar
 from .db.models import Departament
 from .excel_to_pdf_convertor import Convertor
 from .report_processor import Report, algorithms
+from .settings import Settings
+from .db import connection
 
 
 class ReportCreator:
     def __init__(self, departments_id: list or int = None,
                  directory_path_excel_files: str = 'output_excel',
                  directory_path_pdf_files: str = 'output_pdf',
-                 convert_to_pdf: bool = False):
+                 convert_to_pdf: bool = False,
+                 config_file_path: str = 'config.json'):
+        self.settings: Settings = Settings(config_file_path)
+        connection.init(self.settings.db)
         self.departments: list = []
         if departments_id is None:
-            self.departments: list = Departament.get_all()
+            self.departments: list = list(Departament.get_all())
         elif type(departments_id) == int:
             self.departments.append(Departament.get(departments_id))
         elif type(departments_id) == list:
@@ -45,7 +50,7 @@ class ReportCreator:
         print()
         if self.convert_to_pdf:
             print('Converting files...')
-            convertor = Convertor(self.directory_path_pdf_files)
+            convertor = Convertor(self.settings.convertor, self.directory_path_pdf_files)
             file: str = convertor.convert(files)
             if file[-3:] == 'zip':
                 print('\nExtract files...')

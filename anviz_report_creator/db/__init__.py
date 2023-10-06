@@ -1,1 +1,2 @@
-from .connection import session
+from .connection import connection
+from .settings import Settings

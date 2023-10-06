@@ -1,17 +1,17 @@
 import asyncio
 import os
-
 from .async_ilovepdf_api import API
+from .async_ilovepdf_api import Settings as APISettings
 
 
 class Convertor:
-    def __init__(self, output_file_path: str = None):
+    def __init__(self, api_settings: APISettings, output_file_path: str = None):
         if output_file_path is not None:
             self.__output_file_path: str = output_file_path
         else:
             self.__output_file_path: str = 'output'
         os.makedirs(self.__output_file_path, exist_ok=True)
-        self.__api = API('officepdf')
+        self.__api = API('officepdf', api_settings)
 
     def convert(self, files: list or str):
         loop = asyncio.get_event_loop()

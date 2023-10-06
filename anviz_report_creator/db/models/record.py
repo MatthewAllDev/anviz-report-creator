@@ -1,35 +1,33 @@
 import datetime
-import sqlalchemy.orm
-import sqlalchemy.sql.elements
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, select, ScalarResult
+from sqlalchemy.sql.elements import and_, ColumnElement
 from sqlalchemy.dialects import mssql as mssql_dialect
 from anviz_report_creator.db.models import Base
 from anviz_report_creator.db.models import CheckType
 from anviz_report_creator.db.models import Device
 from anviz_report_creator.db.models import User
-from anviz_report_creator.db.connection import session
+from anviz_report_creator.db.connection import connection
 
 
 class Record(Base):
     __tablename__: str = 'Checkinout'
-    id: sqlalchemy.Column = sqlalchemy.Column('Logid', mssql_dialect.INTEGER, primary_key=True)
-    user_id: sqlalchemy.Column = sqlalchemy.Column('Userid', mssql_dialect.VARCHAR(20),
-                                                   sqlalchemy.ForeignKey('Userinfo.Userid'))
-    user: User = sqlalchemy.orm.relationship('User')
-    check_time: sqlalchemy.Column = sqlalchemy.Column('CheckTime', mssql_dialect.DATETIME)
-    check_type_id: sqlalchemy.Column = sqlalchemy.Column('CheckType', mssql_dialect.INTEGER,
-                                                         sqlalchemy.ForeignKey('Status.Statusid'))
-    check_type: CheckType = sqlalchemy.orm.relationship('CheckType')
-    device_id: sqlalchemy.Column = sqlalchemy.Column('Sensorid', mssql_dialect.INTEGER,
-                                                     sqlalchemy.ForeignKey('FingerClient.Clientid'))
-    device: Device = sqlalchemy.orm.relationship('Device')
-    work_type_id: sqlalchemy.Column = sqlalchemy.Column('WorkType', mssql_dialect.INTEGER)
-    identification_code: sqlalchemy.Column = sqlalchemy.Column('AttFlag', mssql_dialect.INTEGER)
-    is_checked: sqlalchemy.Column = sqlalchemy.Column('Checked', mssql_dialect.BIT)
-    is_exported: sqlalchemy.Column = sqlalchemy.Column('Exported', mssql_dialect.BIT)
-    open_door_flag: sqlalchemy.Column = sqlalchemy.Column('OpenDoorFlag', mssql_dialect.BIT)
-    temperature: sqlalchemy.Column = sqlalchemy.Column('temperature', mssql_dialect.FLOAT)
-    why_no_open: sqlalchemy.Column = sqlalchemy.Column('whynoopen', mssql_dialect.INTEGER)
-    mask: sqlalchemy.Column = sqlalchemy.Column('mask', mssql_dialect.INTEGER)
+    id: Mapped[int] = mapped_column('Logid', mssql_dialect.INTEGER, primary_key=True)
+    user_id: Mapped[str] = mapped_column('Userid', mssql_dialect.VARCHAR(20), ForeignKey('Userinfo.Userid'))
+    user: Mapped['User'] = relationship('User')
+    check_time: Mapped[datetime.datetime] = mapped_column('CheckTime', mssql_dialect.DATETIME)
+    check_type_id: Mapped[int] = mapped_column('CheckType', mssql_dialect.INTEGER, ForeignKey('Status.Statusid'))
+    check_type: Mapped['CheckType'] = relationship('CheckType')
+    device_id: Mapped[int] = mapped_column('Sensorid', mssql_dialect.INTEGER, ForeignKey('FingerClient.Clientid'))
+    device: Mapped['Device'] = relationship('Device')
+    work_type_id: Mapped[int] = mapped_column('WorkType', mssql_dialect.INTEGER)
+    identification_code: Mapped[int] = mapped_column('AttFlag', mssql_dialect.INTEGER)
+    is_checked: Mapped[bool] = mapped_column('Checked', mssql_dialect.BIT)
+    is_exported: Mapped[bool] = mapped_column('Exported', mssql_dialect.BIT)
+    open_door_flag: Mapped[bool] = mapped_column('OpenDoorFlag', mssql_dialect.BIT)
+    temperature: Mapped[float] = mapped_column('temperature', mssql_dialect.FLOAT)
+    why_no_open: Mapped[int] = mapped_column('whynoopen', mssql_dialect.INTEGER)
+    mask: Mapped[int] = mapped_column('mask', mssql_dialect.INTEGER)
     is_error_record: bool = False
     is_warning_record: bool = False
     error_reason: str = ''
@@ -59,6 +57,7 @@ class Record(Base):
         self.temperature: float = temperature
         self.why_no_open: int = why_no_open
         self.mask: int = mask
+        super().__init__()
 
     def __repr__(self) -> str:
         return f'<{type(self).__name__}' \
@@ -81,16 +80,15 @@ class Record(Base):
         yield self.error_reason if self.is_error_record or self.is_warning_record else ""
 
     @staticmethod
-    def get(record_id: int = None, user_ids: list = None, date_range: tuple = None) -> list:
+    def get(record_id: int = None, user_ids: list = None, date_range: tuple = None) -> ScalarResult:
         conditions: list = []
         if record_id is not None:
             conditions.append(Record.id == record_id)
         if user_ids is not None:
             conditions.append(Record.user_id.in_(user_ids))
         if date_range is not None:
-            finish_date: datetime.datetime = datetime.datetime.combine(date_range[1], datetime.datetime.min.time())\
+            finish_date: datetime.datetime = datetime.datetime.combine(date_range[1], datetime.datetime.min.time()) \
                                              + datetime.timedelta(days=1, microseconds=-1)
             conditions.append(Record.check_time.between(date_range[0], finish_date))
-        condition: sqlalchemy.sql.elements.BooleanClauseList or sqlalchemy.sql.elements.BinaryExpression = \
-            sqlalchemy.sql.and_(*conditions)
-        return session.query(Record).where(condition).order_by(Record.user_id, Record.check_time).all()
+        condition: ColumnElement[bool] = and_(*conditions)
+        return connection.get().scalars(select(Record).where(condition).order_by(Record.user_id, Record.check_time))
