@@ -14,7 +14,11 @@ pip install -r requirements.txt
 ```
 **4. (optional) If you want to use converting reports to PDF, get API keys: https://developer.ilovepdf.com/signup**
 
-**5. Set the database connection settings in “config.json”, as well as the API keys from the previous step**
+**5. Set the database connection settings and API keys by running the configuration script:**
+```sh
+./init_config_script.py
+```
+This will interactively prompt for settings and update `config.json`.
 
 **6. [Use in console mode](#usage) or import into your project (see ["example" directory](example))**
 
@@ -29,7 +33,11 @@ git clone https://github.com/MatthewAllDev/anviz-report-creator
 
 **2. (optional) If you want to use converting reports to PDF, get API keys: https://developer.ilovepdf.com/signup**
 
-**3. Set the database connection settings in “config.json”, as well as the API keys from the previous step.**
+**3. Set the database connection settings and API keys by running the configuration script:**
+```sh
+./init_config_script.py
+```
+This will update `config.json` with your settings.
 
 **4. (optional) If you don't want to use console mode, create your project based on ["example" directory](example)**
 
@@ -37,30 +45,13 @@ git clone https://github.com/MatthewAllDev/anviz-report-creator
 ```sh
 python scripts_for_docker/create_cron_task.py
 ```
-**6. Build docker image**
+**6. Build and run with docker-compose:**
 ```sh
-docker build -t anviz-rc .
+docker compose up --build
 ```
-**7. Next you can create and run docker container**
+The application will run with cron by default. To run in interactive mode or with custom commands, you can modify `docker-compose.yml` or use `docker compose run anviz-app /bin/sh`.
 
-a) If you want to use this with cron:
-```sh
-docker run -dt -v "{FULL_PATH_TO_HOST_DIR}:/home/app/output" --name anviz-rc anviz-rc
-```
-b) If you want to run your application:
-```sh
-docker run -it -v "{FULL_PATH_TO_HOST_DIR}:/home/app/output" --name anviz-rc anviz-rc {APP_CMD}
-```
-APP_CMD - is the command to run your app
-
-c) If you want to use console mode:
-```sh
-docker run -it -v "{FULL_PATH_TO_HOST_DIR}:/home/app/output" --name anviz-rc anviz-rc /bin/sh
-```
-You can run app with the command:
-```sh
-python /usr/src/app/main.py {arguments} 
-```
+**Note:** Since the project directory is mounted as a volume, you can edit files outside the container, and changes will be reflected inside. Configuration can be updated by running `./init_config_script.py` again.
 
 ## Usage
 

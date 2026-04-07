@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+import os
 from getpass import getpass
 
 
@@ -43,13 +44,14 @@ def get_api_keys(api_keys: list = None) -> list[str]:
 
 
 if __name__ == '__main__':
-    with open('/usr/src/app/config.json', 'r') as config_file:
+    config_path = '/usr/src/app/config.json' if os.path.exists('/usr/src/app/config.json') else 'config.json'
+    with open(config_path, 'r') as config_file:
         config: dict = json.load(config_file)
     config['db']['server'] = get_database_server()
     config['db']['database'] = get_database_name()
     config['db']['user'] = get_database_user()
     config['db']['password'] = get_database_password()
     config['convertor']['public_keys'] = get_api_keys()
-    with open('/usr/src/app/config.json', 'w') as config_file:
+    with open(config_path, 'w') as config_file:
         json.dump(config, config_file, indent=4)
 
