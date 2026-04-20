@@ -1,0 +1,18 @@
+{
+    "db": {
+        "driver": "{ODBC Driver 17 for SQL Server}",
+        "server": "server ip or name",
+        "database": "database name",
+        "user": "username",
+        "password": "password"
+    },
+    "convertor": {
+        "transfer_protocol": "https",
+        "api_url": "api.ilovepdf.com",
+        "api_version": "v1",
+        "public_keys": [
+            "public key 1",
+            "public key 2"
+        ]
+    }
+}
