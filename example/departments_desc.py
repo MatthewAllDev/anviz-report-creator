@@ -1,6 +1,6 @@
-from departament import Departament
+from department import Department
 
 departments: dict = {
-    1: Departament(1, 'Departament 1', 'output\\Department 1'),
-    2: Departament(2, 'Departament 2', 'output\\Department 2')
+    1: Department(1, 'Department 1', 'output\\Department 1'),
+    2: Department(2, 'Department 2', 'output\\Department 2')
 }
