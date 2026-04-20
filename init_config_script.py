@@ -45,7 +45,7 @@ def get_api_keys(api_keys: list = None) -> list[str]:
 
 if __name__ == '__main__':
     config_path = '/usr/src/app/config.json' if os.path.exists('/usr/src/app/config.json') else 'config.json'
-    with open(config_path, 'r') as config_file:
+    with open(f'{config_path}.example', 'r') as config_file:
         config: dict = json.load(config_file)
     config['db']['server'] = get_database_server()
     config['db']['database'] = get_database_name()
