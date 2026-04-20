@@ -1,6 +1,7 @@
 services:
   anviz-app:
-    build: .
+    build:
+      context: .
     volumes:
       - .:/usr/src/app
     working_dir: /usr/src/app

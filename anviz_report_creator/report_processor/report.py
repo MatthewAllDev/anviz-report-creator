@@ -1,6 +1,6 @@
 import os
 import re
-import pandas
+from datetime import timedelta
 from anviz_report_creator.db.models import Record, Departament, User
 from anviz_report_creator.excel_processor import ExcelProcessor
 from anviz_report_creator.excel_processor.row import Row
@@ -23,8 +23,10 @@ class Report:
             self.__user_ids: list = user_ids
         self.__departament_id: int = departament_id
         self.records: list = list(Record.get(user_ids=self.__user_ids, date_range=self.__date_range))
-        self.periods: tuple = tuple(map(lambda period: period.date(),
-                                        pandas.date_range(self.__date_range[0], self.__date_range[1])))
+        self.periods: tuple = tuple(
+            self.__date_range[0] + timedelta(days=offset)
+            for offset in range((self.__date_range[1] - self.__date_range[0]).days + 1)
+        )
         algorithm(self)
 
     def save_records_log(self, directory_path: str = '') -> str:
